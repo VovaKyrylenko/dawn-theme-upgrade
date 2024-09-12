@@ -1,12 +1,14 @@
 <section class="lookbook-section">
   <div class="lookbook-image">
-    {{ section.settings.lookbook_image | image_url: width }}
-    <img
-      src="{{ section.settings.lookbook_image | image_url: section.settings.lookbook_image.width }}"
-      alt="{{ section.settings.lookbook_alt_text }}"
-      width="{{ section.settings.lookbook_image.width }}"
-      height="{{ section.settings.lookbook_image.height }}"
-    >
+    {% if section.settings.lookbook_image != blank %}
+      {{
+        section.settings.lookbook_image
+        | image_url: width: 1500
+        | image_tag: loading: 'lazy', alt: section.settings.lookbook_alt_text, class: 'lookbook-main-image'
+      }}
+    {% else %}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg lookbook-main-image' }}
+    {% endif %}
   </div>
   <div class="lookbook-description">
     <p>{{ section.settings.lookbook_description }}</p>
