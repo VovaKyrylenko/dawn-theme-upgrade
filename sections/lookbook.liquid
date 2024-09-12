@@ -19,7 +19,7 @@
           <div class="product-item">
             {{
               product.featured_image
-              | image_url: 'medium'
+              | image_url: width: product.featured_image.width
               | image_tag: alt: product.title, class: 'lookbook-product-image'
             }}
             <h3>{{ product.title }}</h3>
