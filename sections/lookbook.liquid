@@ -1,197 +1,48 @@
-{% style %}
-  .lookbook-section {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .lookbook-image {
-    width: 100%;
-    height: auto;
-  }
-
-  .lookbook-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  .lookbook-button {
-    background-color: #ffffff;
-    color: #000000;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-  }
-
-  .lookbook-button:hover {
-    background-color: #f0f0f0;
-  }
-
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.8);
-  }
-
-  .modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 1200px;
-  }
-
-  .close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .close:hover,
-  .close:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-  }
-
-  .product-item {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: center;
-  }
-
-  .product-image {
-    width: 100%;
-    height: auto;
-    margin-bottom: 10px;
-  }
-
-  .product-title {
-    font-size: 16px;
-    margin-bottom: 5px;
-  }
-
-  .product-price {
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-
-  .product-form {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .product-select {
-    margin-bottom: 10px;
-  }
-
-  .add-to-cart {
-    background-color: #000000;
-    color: #ffffff;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-
-  .add-to-cart:hover {
-    background-color: #333333;
-  }
-
-  @media screen and (max-width: 768px) {
-    .modal-content {
-      width: 95%;
-    }
-
-    .product-grid {
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    }
-  }
-{% endstyle %}
-
-<div class="lookbook-section">
-  {% if section.settings.lookbook_image != blank %}
+<section class="lookbook-section">
+  <div class="lookbook-image">
     {{
       section.settings.lookbook_image
-      | image_url: width: 1500
-      | image_tag: alt: section.settings.lookbook_alt_text, class: 'lookbook-image', loading: 'lazy'
+      | image_url: width: section.settings.lookbook_image.width
+      | image_tag: alt: section.settings.lookbook_alt_text, class: 'lookbook-main-image'
     }}
-  {% else %}
-    {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg lookbook-image' }}
-  {% endif %}
-
-  <div class="lookbook-overlay">
-    <button class="lookbook-button" onclick="openModal()">{{ section.settings.button_text }}</button>
   </div>
-</div>
+  <div class="lookbook-description">
+    <p>{{ section.settings.lookbook_description }}</p>
+    <button id="open-lookbook-modal" class="button">Shop the Look</button>
+  </div>
 
-<div id="lookbookModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h2>{{ section.settings.modal_title }}</h2>
-    <div class="product-grid">
-      {% for product in section.settings.products %}
-        <div class="product-item" data-product-id="{{ product.id }}">
-          <img
-            src="{{ product.featured_image | image_url: width: 300 }}"
-            alt="{{ product.title | escape }}"
-            class="product-image"
-            loading="lazy"
-          >
-          <h3 class="product-title">{{ product.title | escape }}</h3>
-          <div class="product-price">
-            {% if product.compare_at_price > product.price %}
-              <span class="visually-hidden">{{ 'products.product.sale_price' | t }}</span>
-              <span class="product-price__sale">{{ product.price | money }}</span>
-              <s class="product-price__compare">{{ product.compare_at_price | money }}</s>
-            {% else %}
-              <span class="product-price__regular">{{ product.price | money }}</span>
-            {% endif %}
-          </div>
-          <form method="post" action="/cart/add" class="product-form">
-            {% if product.has_only_default_variant %}
-              <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-            {% else %}
-              <select name="id" class="product-select">
+  <div id="lookbook-modal" class="lookbook-modal">
+    <div class="lookbook-modal-content">
+      <span class="lookbook-modal-close" id="close-lookbook-modal">&times;</span>
+      <div class="lookbook-products">
+        {% for product in section.settings.products %}
+          <div class="product-item">
+            {{
+              product.featured_image
+              | image_url: width: product.featured_image.width
+              | image_tag: alt: product.title, class: 'lookbook-product-image'
+            }}
+            <h3>{{ product.title }}</h3>
+            <p>{{ product.price | money }}</p>
+            {% if product.variants.size > 1 %}
+              <select name="product-variants">
                 {% for variant in product.variants %}
                   <option value="{{ variant.id }}">{{ variant.title }}</option>
                 {% endfor %}
               </select>
             {% endif %}
-            <button type="submit" name="add" class="add-to-cart">{{ 'products.product.add_to_cart' | t }}</button>
-          </form>
-        </div>
-      {% endfor %}
+            <button class="add-to-cart" data-id="{{ product.variants.first.id }}">Add to bag</button>
+          </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 {% schema %}
 {
-  "name": "Lookbook",
+  "name": "lookbook",
+  "presets": [{"name": "Lookbook"}],
   "settings": [
     {
       "type": "image_picker",
@@ -201,77 +52,54 @@
     {
       "type": "text",
       "id": "lookbook_alt_text",
-      "label": "Lookbook Image Alt Text",
-      "default": "Lookbook image"
+      "label": "Lookbook Image Alt Text"
     },
     {
-      "type": "text",
-      "id": "button_text",
-      "label": "Button Text",
-      "default": "View Products"
-    },
-    {
-      "type": "text",
-      "id": "modal_title",
-      "label": "Modal Title",
-      "default": "Lookbook Products"
+      "type": "textarea",
+      "id": "lookbook_description",
+      "label": "Lookbook Description"
     },
     {
       "type": "product_list",
       "id": "products",
       "label": "Select Products"
     }
-  ],
-  "presets": [
-    {
-      "name": "Lookbook",
-      "category": "Product"
-    }
   ]
 }
 {% endschema %}
 
 {% javascript %}
-  function openModal() {
-    document.getElementById('lookbookModal').style.display = 'block';
-  }
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('lookbook-modal');
+    const openModalButton = document.getElementById('open-lookbook-modal');
+    const closeModalButton = document.getElementById('close-lookbook-modal');
 
-  function closeModal() {
-    document.getElementById('lookbookModal').style.display = 'none';
-  }
+    openModalButton.addEventListener('click', () => (modal.style.display = 'block'));
+    closeModalButton.addEventListener('click', () => (modal.style.display = 'none'));
 
-  window.onclick = function(event) {
-    if (event.target == document.getElementById('lookbookModal')) {
-      closeModal();
-    }
-  }
+    window.addEventListener('click', (event) => {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    });
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const addToCartForms = document.querySelectorAll('.product-form');
-
-    addToCartForms.forEach(form => {
-      form.addEventListener('submit', function(e) {
+    const productForms = document.querySelectorAll('.product-form');
+    productForms.forEach((form) => {
+      console.log(form)
+      form.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(form);
-
-        fetch('/cart/add.js', {
+        fetch(window.Shopify.routes.root + 'cart/add.js', {
           method: 'POST',
-          body: formData
+          body: formData,
         })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Product added to cart:', data);
-          const addToCartButton = form.querySelector('.add-to-cart');
-          addToCartButton.textContent = 'Added to Cart';
-          addToCartButton.disabled = true;
-          setTimeout(() => {
-            addToCartButton.textContent = '{{ 'products.product.add_to_cart' | t }}';
-            addToCartButton.disabled = false;
-          }, 2000);
-        })
-        .catch(error => {
-          console.error('Error:', error);
-        });
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Product added to cart:', data);
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
       });
     });
   });
