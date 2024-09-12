@@ -85,6 +85,7 @@
 
     const productForms = document.querySelectorAll('.product-form');
     productForms.forEach((form) => {
+      console.log(form)
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(form);
