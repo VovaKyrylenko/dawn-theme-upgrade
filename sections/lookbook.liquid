@@ -1,9 +1,11 @@
 <section class="lookbook-section">
   <div class="lookbook-image">
-    <img src="{{ section.settings.lookbook_image | image_url: 'medium'}}" 
-         alt="{{ section.settings.lookbook_alt_text }}"
-         width="{{ section.settings.lookbook_image.width }}" 
-         height="{{ section.settings.lookbook_image.height }}">
+    <img
+      src="{{ section.settings.lookbook_image | image_url: 'medium'}}"
+      alt="{{ section.settings.lookbook_alt_text }}"
+      width="{{ section.settings.lookbook_image.width }}"
+      height="{{ section.settings.lookbook_image.height }}"
+    >
   </div>
   <div class="lookbook-description">
     <p>{{ section.settings.lookbook_description }}</p>
@@ -16,10 +18,12 @@
       <div class="lookbook-products">
         {% for product in section.settings.products %}
           <div class="product-item">
-            <img src="{{ product.featured_image | image_url: 'medium' }}" 
-                 alt="{{ product.title }}"
-                 width="{{ product.featured_image.width }}"
-                 height="{{ product.featured_image.height }}">
+            <img
+              src="{{ product.featured_image | image_url: 'medium' }}"
+              alt="{{ product.title }}"
+              width="{{ product.featured_image.width }}"
+              height="{{ product.featured_image.height }}"
+            >
             <h3>{{ product.title }}</h3>
             <p>{{ product.price | money }}</p>
             {% if product.variants.size > 1 %}
@@ -39,7 +43,8 @@
 
 {% schema %}
 {
-  "name": "lookbook section",
+  "name": "lookbook",
+  "presets": [{"name": "Lookbook"}],
   "settings": [
     {
       "type": "image_picker",
