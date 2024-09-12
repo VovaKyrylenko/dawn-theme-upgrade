@@ -3,11 +3,8 @@
     {% if section.settings.lookbook_image != blank %}
       {{
         section.settings.lookbook_image
-        | image_url: width: 1500
-        | image_tag: loading: 'lazy', alt: section.settings.lookbook_alt_text
+        | image_url: width: section.settings.lookbook_image.width, alt: section.settings.lookbook_alt_text
       }}
-    {% else %}
-      {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg lookbook-main-image' }}
     {% endif %}
   </div>
   <div class="lookbook-description">
