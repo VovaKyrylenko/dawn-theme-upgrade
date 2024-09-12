@@ -49,3 +49,13 @@
   border: none;
   cursor: pointer;
 }
+
+.lookbook-main-image {
+  max-width: 100%;
+  height: auto; 
+}
+
+.lookbook-product-image {
+  max-width: 100%; 
+  height: auto;
+}
