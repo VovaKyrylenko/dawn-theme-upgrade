@@ -1,0 +1,81 @@
+<section class="lookbook-section">
+  <div class="lookbook-image">
+    <img src="{{ section.settings.lookbook_image | image_url: 'medium'}}" 
+         alt="{{ section.settings.lookbook_alt_text }}"
+         width="{{ section.settings.lookbook_image.width }}" 
+         height="{{ section.settings.lookbook_image.height }}">
+  </div>
+  <div class="lookbook-description">
+    <p>{{ section.settings.lookbook_description }}</p>
+    <button id="open-lookbook-modal" class="button">Shop the Look</button>
+  </div>
+
+  <div id="lookbook-modal" class="lookbook-modal">
+    <div class="lookbook-modal-content">
+      <span class="lookbook-modal-close" id="close-lookbook-modal">&times;</span>
+      <div class="lookbook-products">
+        {% for product in section.settings.products %}
+          <div class="product-item">
+            <img src="{{ product.featured_image | image_url: 'medium' }}" 
+                 alt="{{ product.title }}"
+                 width="{{ product.featured_image.width }}"
+                 height="{{ product.featured_image.height }}">
+            <h3>{{ product.title }}</h3>
+            <p>{{ product.price | money }}</p>
+            {% if product.variants.size > 1 %}
+              <select name="product-variants">
+                {% for variant in product.variants %}
+                  <option value="{{ variant.id }}">{{ variant.title }}</option>
+                {% endfor %}
+              </select>
+            {% endif %}
+            <button class="add-to-cart" data-id="{{ product.variants.first.id }}">Add to bag</button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "lookbook section",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "lookbook_image",
+      "label": "Lookbook Image"
+    },
+    {
+      "type": "text",
+      "id": "lookbook_alt_text",
+      "label": "Lookbook Image Alt Text"
+    },
+    {
+      "type": "textarea",
+      "id": "lookbook_description",
+      "label": "Lookbook Description"
+    },
+    {
+      "type": "product_list",
+      "id": "products",
+      "label": "Select Products"
+    }
+  ]
+}
+{% endschema %}
+
+<script>
+  const modal = document.getElementById('lookbook-modal');
+  const openModalButton = document.getElementById('open-lookbook-modal');
+  const closeModalButton = document.getElementById('close-lookbook-modal');
+
+  openModalButton.onclick = () => modal.style.display = 'block';
+  closeModalButton.onclick = () => modal.style.display = 'none';
+
+  window.onclick = (event) => {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  };
+</script>
