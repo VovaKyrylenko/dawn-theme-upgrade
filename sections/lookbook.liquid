@@ -17,11 +17,7 @@
       <div class="lookbook-products">
         {% for product in section.settings.products %}
           <div class="product-item">
-            {{
-              product.featured_image
-              | image_url: width: product.featured_image.width
-              | image_tag: alt: product.title
-            }}
+            {{ product.images.first | image_url: width: product.images.first.width | image_tag: alt: product.title }}
             <h3>{{ product.title }}</h3>
             <p>{{ product.price | money }}</p>
             {% if product.variants.size > 1 %}
