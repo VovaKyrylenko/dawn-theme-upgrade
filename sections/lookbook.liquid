@@ -1,13 +1,19 @@
 <section class="lookbook-section">
   <div class="lookbook-image">
-    {{
-      section.settings.lookbook_image
-      | image_url: width: section.settings.lookbook_image.width
-      | image_tag: alt: section.settings.lookbook_alt_text, class: 'lookbook-main-image'
-    }}
+    {% if section.settings.lookbook_image != blank %}
+      {{
+        section.settings.lookbook_image
+        | image_url: width: section.settings.lookbook_image.width
+        | image_tag: alt: section.settings.lookbook_alt_text, class: 'lookbook-main-image', loading: 'lazy'
+      }}
+    {% else %}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg lookbook-main-image' }}
+    {% endif %}
   </div>
   <div class="lookbook-description">
-    <p>{{ section.settings.lookbook_description }}</p>
+    {% if section.settings.lookbook_description != blank %}
+      <p>{{ section.settings.lookbook_description }}</p>
+    {% endif %}
     <button id="open-lookbook-modal" class="button">Shop the Look</button>
   </div>
 
@@ -16,22 +22,28 @@
       <span class="lookbook-modal-close" id="close-lookbook-modal">&times;</span>
       <div class="lookbook-products">
         {% for product in section.settings.products %}
-          <div class="product-item">
-            {{
-              product.featured_image
-              | image_url: width: product.featured_image.width
-              | image_tag: alt: product.title, class: 'lookbook-product-image'
-            }}
-            <h3>{{ product.title }}</h3>
+          <div class="product-item" data-product-id="{{ product.id }}">
+            {% if product.featured_image != blank %}
+              {{
+                product.featured_image
+                | image_url: width: 300
+                | image_tag: alt: product.title, class: 'lookbook-product-image', loading: 'lazy'
+              }}
+            {% else %}
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg lookbook-product-image' }}
+            {% endif %}
+            <h3>{{ product.title | escape }}</h3>
             <p>{{ product.price | money }}</p>
-            {% if product.variants.size > 1 %}
-              <select name="product-variants">
+            {% if product.has_only_default_variant %}
+              <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+            {% else %}
+              <select name="id" class="product-select">
                 {% for variant in product.variants %}
-                  <option value="{{ variant.id }}">{{ variant.title }}</option>
+                  <option value="{{ variant.id }}">{{ variant.title }} - {{ variant.price | money }}</option>
                 {% endfor %}
               </select>
             {% endif %}
-            <button class="add-to-cart" data-id="{{ product.variants.first.id }}">Add to bag</button>
+            <button class="button add-to-cart" data-product-id="{{ product.id }}">Add to bag</button>
           </div>
         {% endfor %}
       </div>
@@ -41,8 +53,7 @@
 
 {% schema %}
 {
-  "name": "lookbook",
-  "presets": [{"name": "Lookbook"}],
+  "name": "Lookbook",
   "settings": [
     {
       "type": "image_picker",
@@ -52,7 +63,8 @@
     {
       "type": "text",
       "id": "lookbook_alt_text",
-      "label": "Lookbook Image Alt Text"
+      "label": "Lookbook Image Alt Text",
+      "default": "Lookbook image"
     },
     {
       "type": "textarea",
@@ -62,45 +74,146 @@
     {
       "type": "product_list",
       "id": "products",
-      "label": "Select Products"
+      "label": "Select Products",
+      "limit": 4
+    }
+  ],
+  "presets": [
+    {
+      "name": "Lookbook",
+      "category": "Product"
     }
   ]
 }
 {% endschema %}
 
+{% stylesheet %}
+  .lookbook-section {
+    padding: 2rem 0;
+    text-align: center;
+  }
+
+  .lookbook-image {
+    margin-bottom: 1rem;
+  }
+
+  .lookbook-main-image,
+  .lookbook-product-image {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .lookbook-description {
+    margin-bottom: 1rem;
+  }
+
+  .button {
+    padding: 0.5rem 1rem;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+
+  .lookbook-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  .lookbook-modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 1200px;
+  }
+
+  .lookbook-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .lookbook-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .product-item {
+    text-align: center;
+  }
+
+  .product-select {
+    margin-bottom: 0.5rem;
+  }
+
+  @media screen and (max-width: 767px) {
+    .lookbook-modal-content {
+      width: 95%;
+    }
+  }
+{% endstylesheet %}
+
 {% javascript %}
-  document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('lookbook-modal');
-    const openModalButton = document.getElementById('open-lookbook-modal');
-    const closeModalButton = document.getElementById('close-lookbook-modal');
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('lookbook-modal');
+  const openModalButton = document.getElementById('open-lookbook-modal');
+  const closeModalButton = document.getElementById('close-lookbook-modal');
 
-    openModalButton.addEventListener('click', () => (modal.style.display = 'block'));
-    closeModalButton.addEventListener('click', () => (modal.style.display = 'none'));
+  openModalButton.addEventListener('click', () => modal.style.display = 'block');
+  closeModalButton.addEventListener('click', () => modal.style.display = 'none');
 
-    window.addEventListener('click', (event) => {
-      if (event.target == modal) {
-        modal.style.display = 'none';
+  window.addEventListener('click', (event) => {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  });
+
+  // AJAX add to cart
+  const addToCartButtons = document.querySelectorAll('.add-to-cart');
+  addToCartButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      const productId = this.getAttribute('data-product-id');
+      const productContainer = document.querySelector(`.product-item[data-product-id="${productId}"]`);
+      let variantId;
+
+      if (productContainer.querySelector('.product-select')) {
+        variantId = productContainer.querySelector('.product-select').value;
+      } else {
+        variantId = productContainer.querySelector('input[name="id"]').value;
       }
-    });
 
-    const productForms = document.querySelectorAll('.product-form');
-    productForms.forEach((form) => {
-      console.log(form)
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(form);
-        fetch(window.Shopify.routes.root + 'cart/add.js', {
-          method: 'POST',
-          body: formData,
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log('Product added to cart:', data);
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-          });
+      const formData = new FormData();
+      formData.append('id', variantId);
+      formData.append('quantity', 1);
+
+      fetch(window.Shopify.routes.root + 'cart/add.js', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Product added to cart:', data);
+        // Here you can add logic to update mini-cart or show a success message
+        alert('Product added to cart successfully!');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding product to cart. Please try again.');
       });
     });
   });
+});
 {% endjavascript %}
