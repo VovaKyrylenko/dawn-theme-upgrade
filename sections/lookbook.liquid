@@ -3,7 +3,8 @@
     {% if section.settings.lookbook_image != blank %}
       {{
         section.settings.lookbook_image
-        | image_url: width: section.settings.lookbook_image.width, alt: section.settings.lookbook_alt_text
+        | image_url: width: section.settings.lookbook_image.width
+        | image_tag: alt: section.settings.lookbook_alt_text
       }}
     {% endif %}
   </div>
